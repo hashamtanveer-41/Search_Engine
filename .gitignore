@@ -1,0 +1,4 @@
+# big files stay out of git (share them via Google Drive)
+arxiv-metadata-oai-snapshot.json
+index/full/
+__pycache__/
