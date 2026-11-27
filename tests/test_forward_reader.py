@@ -80,5 +80,9 @@ def run_tests() -> None:
     print("ALL TESTS PASSED: ForwardIndexReader matches ForwardIndexWriter byte-for-byte.")
 
 
+def test_all():
+    run_tests()
+
+
 if __name__ == "__main__":
     run_tests()
