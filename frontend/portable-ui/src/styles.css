@@ -1,0 +1,469 @@
+/* portable-ui: Tailwind v4 theme for the shadcn components in base/ and the composites in derived/.
+   Black and white, with colour only where it means something (the semantic tokens below).
+   Import once in an app: `@import 'portable-ui/styles.css';` */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
+/* The package's own sources, so their classes are generated in whichever app imports this file. */
+@source './';
+
+@custom-variant dark (&:is([data-theme='dark'] *, .dark *));
+/* A page can say it is under a finger, whatever the device it runs on (the playground's Phone and
+   Tablet frames do: playground/touch.ts). It then draws as a touch screen does: finger-sized, and
+   nothing on hover. `:where` keeps each rule as specific as Tailwind's own. */
+@custom-variant pointer-coarse {
+  @media (pointer: coarse) { @slot; }
+  &:where([data-pointer='coarse'] *) { @slot; }
+}
+@custom-variant pointer-fine {
+  @media (pointer: fine) { &:not(:where([data-pointer='coarse'] *)) { @slot; } }
+}
+/* A phone: narrower than 600 px, or a touch screen under 460 px tall (a phone on its side: 280 to 380
+   px once the browser's bars are counted; a tablet on its side has 470 or more, and is not one:
+   ). The frame (here), the panes and the spaces (PHONE_QUERY, the same) all go by it,
+   so a phone held sideways is a phone everywhere, not a phone's top bar over a desktop's panes. A
+   desktop window made short keeps the desktop (its pointer is fine). `roomy` is everything else; a
+   tablet's size (600 to 1023 px, TABLET_QUERY) is roomy, its sidebar starting as the rail. */
+@custom-variant phone {
+  @media (max-width: 599px), (max-height: 460px) and (pointer: coarse) { @slot; }
+}
+@custom-variant roomy {
+  @media (min-width: 600px) and (min-height: 461px), (min-width: 600px) and (pointer: fine) { @slot; }
+}
+@custom-variant hover {
+  @media (hover: hover) { &:hover:not(:where([data-pointer='coarse'] *)) { @slot; } }
+}
+
+:root {
+  --radius: 0.5rem;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f4;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f4f4f4;
+  --muted-foreground: #737373;
+  --accent: #f4f4f4;
+  --accent-foreground: #0a0a0a;
+  --destructive: #b91c1c;
+  --border: #e5e5e5;
+  --input: #d4d4d4;
+  /* Focus: the outline itself grows, in its own colour at full opacity (no pale halo). */
+  --ring: #0a0a0a;
+  --sidebar: #fafafa;
+
+  /* Meaning. Each has ink, a soft fill and a line. */
+  --ok: #15803d; --ok-soft: #ecfdf3; --ok-line: #bbf7d0;
+  --warn: #b45309; --warn-soft: #fffbeb; --warn-line: #fde68a;
+  --bad: #b91c1c; --bad-soft: #fef2f2; --bad-line: #fecaca;
+  --info: #1d4ed8; --info-soft: #eff6ff; --info-line: #bfdbfe;
+  /* The current page's row, pointed at: its blue, deeper ("hover should darken the existing blue"). */
+  --info-soft-hover: color-mix(in oklab, var(--info-soft), var(--info-line) 55%);
+  /* A count's figure on its tinted pill: white on the light theme's deep inks. */
+  --count-text: #ffffff;
+  --def: #1d4ed8; --def-soft: #eff6ff; --def-line: #bfdbfe;
+  --thm: #6d28d9; --thm-soft: #f5f3ff; --thm-line: #ddd6fe;
+  --ex: #0f766e; --ex-soft: #f0fdfa; --ex-line: #99f6e4;
+  --tip: #b45309; --tip-soft: #fffbeb; --tip-line: #fde68a;
+  --neutral: #525252; --neutral-soft: #f4f4f4; --neutral-line: #d4d4d4;
+
+  /* Series: the colours of a chart's lines and areas, told apart by hue at a glance, in order. */
+  --series-1: #2563eb; --series-2: #d97706; --series-3: #059669; --series-4: #7c3aed; --series-5: #db2777; --series-6: #0891b2;
+}
+
+[data-theme='dark'], .dark {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #111111;
+  --card-foreground: #fafafa;
+  --popover: #141414;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #0a0a0a;
+  --secondary: #1f1f1f;
+  --secondary-foreground: #fafafa;
+  --muted: #1c1c1c;
+  --muted-foreground: #a3a3a3;
+  --accent: #1f1f1f;
+  --accent-foreground: #fafafa;
+  --destructive: #f87171;
+  --border: #262626;
+  --input: #3a3a3a;
+  --ring: #fafafa;
+  --sidebar: #0f0f0f;
+
+  --ok: #4ade80; --ok-soft: #0c2416; --ok-line: #14532d;
+  --warn: #fbbf24; --warn-soft: #261b06; --warn-line: #713f12;
+  --bad: #f87171; --bad-soft: #2a0e0e; --bad-line: #7f1d1d;
+  --info: #60a5fa; --info-soft: #0c1a33; --info-line: #1e3a8a;
+  /* Deeper toward the theme's stronger blue, as on the light theme; toward black it went nearly black
+     on the dark sidebar ("light mode hover is good, dark one is not"). */
+  --info-soft-hover: color-mix(in oklab, var(--info-soft), var(--info-line) 45%);
+  /* The dark theme's inks are light: white on them could not be read ("4 is not readable"). */
+  --count-text: #0a0a0a;
+  --def: #60a5fa; --def-soft: #0c1a33; --def-line: #1e3a8a;
+  --thm: #a78bfa; --thm-soft: #1a1033; --thm-line: #4c1d95;
+  --ex: #2dd4bf; --ex-soft: #062320; --ex-line: #115e59;
+  --tip: #fbbf24; --tip-soft: #261b06; --tip-line: #713f12;
+  --neutral: #a3a3a3; --neutral-soft: #1c1c1c; --neutral-line: #3a3a3a;
+
+  --series-1: #60a5fa; --series-2: #fbbf24; --series-3: #34d399; --series-4: #a78bfa; --series-5: #f472b6; --series-6: #22d3ee;
+}
+
+@theme inline {
+  /* Every Tailwind transition (transition-colors, transition-all…) on the library's settle spring. */
+  --default-transition-duration: var(--dur-quick);
+  --default-transition-timing-function: var(--ease-settle);
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-ok: var(--ok); --color-ok-soft: var(--ok-soft); --color-ok-line: var(--ok-line);
+  --color-warn: var(--warn); --color-warn-soft: var(--warn-soft); --color-warn-line: var(--warn-line);
+  --color-bad: var(--bad); --color-bad-soft: var(--bad-soft); --color-bad-line: var(--bad-line);
+  --color-info: var(--info); --color-info-soft: var(--info-soft); --color-info-line: var(--info-line); --color-info-soft-hover: var(--info-soft-hover);
+  --color-def: var(--def); --color-def-soft: var(--def-soft); --color-def-line: var(--def-line);
+  --color-thm: var(--thm); --color-thm-soft: var(--thm-soft); --color-thm-line: var(--thm-line);
+  --color-ex: var(--ex); --color-ex-soft: var(--ex-soft); --color-ex-line: var(--ex-line);
+  --color-tip: var(--tip); --color-tip-soft: var(--tip-soft); --color-tip-line: var(--tip-line);
+  --color-neutral: var(--neutral); --color-neutral-soft: var(--neutral-soft); --color-neutral-line: var(--neutral-line);
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background font-sans text-foreground antialiased; }
+}
+
+/* Marks (base/mark.tsx): a rounded-square tile. */
+.ui-mark-tile { border-radius: 6px; }
+
+/* ------------------------------------------------------------------ Motion
+   Rules: springs for everything (lib/motion): what a finger moves, or that opens and closes, runs on
+   a real spring that keeps the gesture's speed; what only changes state uses the same springs as
+   curves below, as transitions, so a new click while something moves redirects it from wherever it is. Keyframes are kept only for one-offs
+   (the press ring, a toast's time bar). Everything stands still under prefers-reduced-motion, but
+   a toast's time bar: it is a reading of the time left, not a flourish. */
+:root {
+  /* The library's springs (lib/motion, SPRINGS) sampled into curves, for what changes state with no
+     gesture behind it (a tick, a dot, a hover). They are transitions, so a change mid-way turns them
+     round from where they are; anything a finger moves is a real spring in lib/motion instead.
+     Each curve's length is the time its spring takes to come to rest. */
+  --ease-settle: linear(0, 0.081, 0.21, 0.363, 0.504, 0.615, 0.713, 0.789, 0.843, 0.887, 0.919, 0.941, 0.959, 0.971, 0.979, 0.986, 0.99, 0.993, 0.995, 0.997, 0.998, 0.998, 0.999, 0.999, 1);
+  --ease-pop: linear(0, 0.122, 0.325, 0.565, 0.757, 0.916, 1.016, 1.065, 1.083, 1.079, 1.063, 1.044, 1.025, 1.011, 1.001, 0.996, 0.993, 0.993, 0.994, 0.996, 0.997, 0.999, 1, 1, 1);
+  --dur-quick: 240ms; --dur-move: 470ms; --dur-pop: 465ms;
+  /* Lets height (and block-size) transition to and from auto, for opening things. */
+  interpolate-size: allow-keywords;
+}
+
+/* Checkbox: the box fills, then the tick draws itself from its short stroke to its long one;
+   unchecking undraws it quickly, so the box empties without a stale tick. */
+/* Checking is one motion: the fill fades in, the tick draws and (on a mark with a letter) the letter
+   fades out, all starting together and taking the same time, --check-ms; unchecking runs it back. */
+:root { --check-ms: 220ms; }
+[data-slot='checkbox'] { transition-property: background-color, border-color, box-shadow, scale, color; transition-duration: var(--check-ms); transition-timing-function: var(--ease-settle); }
+/* Unchecked, the tick undraws past its start, to 1.5 (its gap is long enough that no second dash
+   shows). Its round caps paint a dot wherever a dash is only a few units long, and an undraw that
+   eased into the start held one there, dark on the emptied box, for the last 150 ms. Past it, the dash is gone 50 ms in and the slow end of the ease draws nothing. */
+[data-slot='checkbox-tick'] { stroke-dasharray: 1 2; stroke-dashoffset: 1.5; transition: stroke-dashoffset var(--check-ms) var(--ease-settle); }
+[data-slot='checkbox'][data-state='checked'] [data-slot='checkbox-tick'] { stroke-dashoffset: 0; }
+[data-slot='checkbox'][data-state='indeterminate'] [data-slot='checkbox-tick'] { stroke-dashoffset: 0; }
+/* A mark with something in it while unchecked (an option's letter): it shrinks and fades as the box
+   fills and the tick draws; unchecked again, it grows back once the tick has gone. */
+[data-slot='checkbox-morph'] { transition: opacity var(--check-ms) var(--ease-settle), scale var(--check-ms) var(--ease-settle); }
+[data-slot='checkbox'][data-state='checked'] > [data-slot='checkbox-morph'] { opacity: 0; scale: .6; }
+
+/* Radio: the dot springs in from nothing; it shrinks away when another is chosen. */
+[data-slot='radio-group-dot'] { scale: 0; transition: scale var(--dur-quick) var(--ease-settle); }
+[data-slot='radio-group-item'][data-state='checked'] [data-slot='radio-group-dot'] { scale: 1; transition: scale var(--dur-pop) var(--ease-pop); }
+
+/* Tabs: the pill's left and right edges are springs (base/tabs.tsx); only a change of row height eases here. */
+[data-slot='tabs-indicator'] { transition: top var(--dur-move) var(--ease-settle), height var(--dur-move) var(--ease-settle); }
+
+/* Accordion and anything else that opens in place (a sidebar chapter): a grid row whose size a
+   spring drives, 0fr closed to 1fr open (lib/motion, installOpenSprings), and its text rises in.
+   Closed, it is hidden from pointer, keyboard and screen readers. These are only the resting looks,
+   for before the spring is installed. */
+/* (!important: Radix leaves `transition-duration: 0s` inline on the content after measuring it.) */
+[data-slot='accordion-content'] { display: grid !important; grid-template-rows: 0fr; visibility: hidden; transition: none !important; }
+[data-slot='accordion-content'][data-state='open'] { grid-template-rows: 1fr; visibility: visible; }
+[data-slot='disclosure'] { display: grid; grid-template-rows: 0fr; visibility: hidden; }
+[data-slot='disclosure'][data-open] { grid-template-rows: 1fr; visibility: visible; }
+[data-slot='disclosure'] > * { min-height: 0; overflow: hidden; }
+
+/* A solution spoiler (<details>) opens by its height too. */
+[data-slot='solution']::details-content { block-size: 0; overflow: hidden; transition: block-size var(--dur-move) var(--ease-settle), content-visibility var(--dur-move) allow-discrete; }
+[data-slot='solution'][open]::details-content { block-size: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='checkbox-tick'], [data-slot='checkbox-morph'], [data-slot='radio-group-dot'], [data-slot='tabs-indicator'], [data-slot='accordion-body'],
+  [data-slot='accordion-content'], [data-slot='accordion-content'][data-state='open'], [data-slot='tabs-content'], [data-slot='disclosure'], [data-slot='solution']::details-content { transition: none !important; animation: none !important; }
+}
+
+/* ------------------------------------------------------------------ Toasts (base/sonner.tsx)
+   Top right, each with a close button and a bar along its bottom edge that runs down the time it
+   has left. The bar stops while the pointer is over the toasts (sonner holds their timers then).
+   Drawn as a background image: sonner already uses the toast's ::before and ::after, and its own
+   `background` shorthand would reset the size, so the size reads an animated property instead. */
+@property --ui-toast-left { syntax: '<percentage>'; inherits: false; initial-value: 100%; }
+[data-sonner-toast][data-styled='true'] {
+  --ui-toast-bar: var(--neutral);
+  background-image: linear-gradient(var(--ui-toast-bar), var(--ui-toast-bar)) !important;
+  background-repeat: no-repeat !important;
+  background-position: left bottom !important;
+  background-size: var(--ui-toast-left) 3px !important;
+  animation: ui-toast-time-a var(--ui-toast-ms, 5000ms) linear forwards;
+}
+[data-sonner-toast][data-type='success'] { --ui-toast-bar: var(--ok); }
+[data-sonner-toast][data-type='info'] { --ui-toast-bar: var(--info); }
+[data-sonner-toast][data-type='warning'] { --ui-toast-bar: var(--warn); }
+[data-sonner-toast][data-type='error'] { --ui-toast-bar: var(--bad); }
+[data-sonner-toast][data-type='loading'] { background-image: none !important; animation: none; }
+[data-sonner-toaster]:hover [data-sonner-toast], [data-sonner-toast][data-expanded='true']:hover { animation-play-state: paused; }
+[data-sonner-toast][data-type='success'] [data-icon] { color: var(--ok); }
+[data-sonner-toast][data-type='info'] [data-icon] { color: var(--info); }
+[data-sonner-toast][data-type='warning'] [data-icon] { color: var(--warn); }
+[data-sonner-toast][data-type='error'] [data-icon] { color: var(--bad); }
+/* The close button on the right-hand corner, where a right-aligned stack's hand already is. */
+[data-sonner-toaster] { font-family: var(--font-sans) !important; }
+[data-sonner-toast] { transition-timing-function: var(--ease-settle) !important; }
+/* A grouped notification's list: click it to see everything it covers. */
+[data-slot='toast-items'] { display: block; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 4px; outline: none; }
+[data-slot='toast-items']:focus-visible { box-shadow: 0 0 0 3px var(--ring-soft); }
+[data-slot='toast-items'] ul { margin: 2px 0 0; padding-left: 16px; }
+[data-sonner-toaster][data-x-position][dir] { --toast-close-button-start: unset; --toast-close-button-end: 0; --toast-close-button-transform: translate(35%, -35%); }
+[data-sonner-toast] [data-close-button] { background: var(--popover) !important; border-color: var(--border) !important; color: var(--muted-foreground); }
+[data-sonner-toast] [data-close-button]:hover { color: var(--foreground); }
+[data-sonner-toast] [data-close-button]:focus-visible { box-shadow: 0 0 0 3px var(--ring-soft) !important; }
+/* A group that gains a notification starts its time over: its class flips between a and b. */
+[data-sonner-toast].ui-toast-b { animation-name: ui-toast-time-b; }
+@keyframes ui-toast-time-a { from { --ui-toast-left: 100%; } to { --ui-toast-left: 0%; } }
+@keyframes ui-toast-time-b { from { --ui-toast-left: 100%; } to { --ui-toast-left: 0%; } }
+/* The count a grouped notification carries; it pops when it goes up. */
+[data-slot='toast-count'] { display: inline-grid; place-items: center; min-width: 22px; height: 18px; padding: 0 6px; border-radius: 999px; background: var(--muted); font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--foreground); animation: ui-count 320ms var(--ease-pop); }
+.ui-toast-b [data-slot='toast-count'] { animation-name: ui-count-b; }
+@keyframes ui-count { from { scale: 1.35; } }
+@keyframes ui-count-b { from { scale: 1.35; } }
+@media (prefers-reduced-motion: reduce) { [data-sonner-toast][data-styled='true'] { background-image: none !important; } }
+
+/* ------------------------------------------------------------------ Smooth
+   One timing for everything that changes on hover or state: colours, shadows and transforms ease
+   out over 180ms; popovers, menus, selects and tooltips open and close on the settle curve. */
+[data-slot='button'], [data-slot='select-trigger'], [data-slot='tabs-trigger'], [data-slot='accordion-trigger'], [data-slot='input'], [data-slot='textarea'],
+[data-slot='radio-group-item'], [data-slot='switch'], [data-slot='switch-thumb'], [data-slot='dropdown-menu-item'], [data-slot='select-item'] {
+  --tw-duration: var(--dur-quick); --tw-ease: var(--ease-settle);
+}
+/* The switch's knob is drawn by its springs (base/switch.tsx): no transition of its own. */
+[data-slot='switch-thumb'] { transition: none; }
+:is([data-slot='dropdown-menu-content'], [data-slot='dropdown-menu-sub-content'], [data-slot='select-content'], [data-slot='popover-content'], [data-slot='tooltip-content'], [data-slot='tooltip-content'], [data-slot='dialog-content'], [data-slot='dialog-overlay'], [data-slot='sheet-content'], [data-slot='sheet-overlay']) {
+  --tw-duration: 200ms; --tw-ease: var(--ease-settle); --tw-animation-duration: 200ms;
+}
+[data-slot='sheet-content'] { --tw-duration: 320ms; --tw-animation-duration: 320ms; }
+[data-slot='mark'] { transition: outline-color 180ms var(--ease-settle), outline-offset 180ms var(--ease-settle); }
+
+/* ------------------------------------------------------------------ Press (base/press.ts)
+   Every button. Held down, the content grows slightly and fades; a filled button's outline grows
+   outward by 2px into a soft ring (box-shadow), a ghost button's hover fill darkens, a link only
+   dims. All ease back on release. Nothing re-lays out and
+   nothing moves: box-shadow and scale only, as transitions that follow the press. */
+:root { --ring-soft: color-mix(in srgb, var(--ring) 35%, transparent); }
+/* The ring takes the button's own colour: a variant sets --press-ring (green success, red destructive). */
+[data-slot='button']:not([data-variant='ghost'], [data-variant='link'])[data-pressed] { box-shadow: 0 0 0 2px var(--press-ring, var(--ring-soft)); }
+/* Ghost: no outline to grow, so the fill it shows on hover deepens while held. */
+[data-slot='button'][data-variant='ghost'][data-pressed] { background-color: color-mix(in srgb, var(--foreground) 12%, transparent); }
+/* Held, the content (label and icons) grows slightly and fades a little: a scale, so neither the
+   button nor anything around it moves. */
+[data-slot='button-content'] { transition: scale var(--dur-quick) var(--ease-settle), opacity var(--dur-quick) var(--ease-settle); }
+[data-slot='button'][data-pressed] > [data-slot='button-content'] { scale: 1.06; opacity: .7; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='switch-thumb'], [data-slot='button-content'] { transition: none; }
+}
+
+/* ------------------------------------------------------------------ Notifications (base/notifications.tsx)
+   Cards move between stacked and listed by transitions (so a stack turns round mid-way), come in
+   from above, and leave to the right. The bar along the bottom runs down the time left; it runs
+   only while that notification is in front and nothing holds its stack. */
+[data-slot='notification'] {
+  transform-origin: top center;
+  translate: var(--drag-x, 0px) 0;
+  transition: transform var(--dur-move) var(--ease-settle), opacity var(--dur-move) var(--ease-settle), scale var(--dur-quick) var(--ease-settle);
+  @starting-style { opacity: 0; }
+}
+/* Pressed like a button: drawn slightly bigger (scale never moves anything around it). */
+[data-slot='notification'][data-pressed] { scale: 1.025; }
+/* Dragged: it follows the pointer exactly (its --drag-x is a spring, base/notifications.tsx); let go
+   and it springs back, or leaves that way at the speed it was flicked. */
+[data-slot='notification'][data-dragging] { cursor: grabbing; }
+[data-slot='notification'][data-leaving] { pointer-events: none; }
+[data-slot='notification-stack'], [data-slot='notification-stack-body'] { transition: height var(--dur-move) var(--ease-settle); }
+[data-slot='notification-time'] { animation-name: ui-notice-time; animation-duration: var(--notice-ms); animation-timing-function: linear; animation-fill-mode: forwards; }
+@keyframes ui-notice-time { from { scale: 1 1; } to { scale: 0 1; } }
+/* A pile that grows pops a little (it is remounted with each new count). */
+[data-part='notification-count'], [data-part='notification-count-badge'] { animation: ui-notice-count 280ms var(--ease-pop); }
+@keyframes ui-notice-count { from { scale: 1.3; } }
+[data-part='notification-more'], [data-part='notification-clear'] { transition: opacity var(--dur-quick) var(--ease-settle); @starting-style { opacity: 0; } }
+/* The header above a stack a finger opened comes down into place as its cards move under it. */
+[data-slot='notification-head'] { transition: opacity var(--dur-quick) var(--ease-settle), translate var(--dur-move) var(--ease-settle); @starting-style { opacity: 0; translate: 0 -8px; } }
+/* …and goes back up as it fades, the way it came. */
+[data-slot='notification-head'][data-gone] { opacity: 0; translate: 0 -8px; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='notification'], [data-slot='notification-stack'], [data-slot='notification-stack-body'] { transition: none; }
+  [data-slot='notification-head'] { transition: opacity var(--dur-quick) var(--ease-settle); }
+  [data-part='notification-count'], [data-part='notification-count-badge'] { animation: none; }
+}
+
+/* Slider: the thumb's positioner sits on the track's centre line (Radix places it absolutely). */
+[data-slot='slider'][data-orientation='horizontal'] > span:has(> [data-slot='slider-thumb']) { display: block; height: 1rem; line-height: 0; top: 50%; translate: 0 -50%; }
+
+/* ------------------------------------------------------------------ Predict first (derived/views/predict.tsx)
+   The part waiting for an answer is veiled, not removed (it keeps its size): blurred and faded under
+   the question card. Answered, the veil lifts by a transition. */
+[data-slot='predict-hidden'] { transition: filter var(--dur-move) var(--ease-settle), opacity var(--dur-move) var(--ease-settle); }
+[data-slot='predict']:not([data-revealed]) > [data-slot='predict-hidden'] { filter: blur(7px) saturate(.6); opacity: .45; user-select: none; }
+[data-slot='predict']:not([data-revealed]) > [data-slot='predict-hidden']:empty { min-height: 220px; }
+[data-slot='predict-veil'] { transition: opacity var(--dur-move) var(--ease-settle), visibility 0s; }
+[data-slot='predict'][data-revealed] > [data-slot='predict-veil'] { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity var(--dur-move) var(--ease-settle), visibility 0s linear var(--dur-move); }
+[data-slot='predict-card'] { transition: translate var(--dur-move) var(--ease-settle), scale var(--dur-move) var(--ease-settle); }
+[data-slot='predict'][data-revealed] [data-slot='predict-card'] { translate: 0 -8px; scale: .98; }
+@media (prefers-reduced-motion: reduce) { [data-slot='predict-hidden'], [data-slot='predict-veil'], [data-slot='predict-card'] { transition: none; } }
+@media print { [data-slot='predict-veil'] { display: none; } [data-slot='predict-hidden'] { filter: none !important; opacity: 1 !important; } }
+
+/* ------------------------------------------------------------------ Truncation tips (base/truncation.ts)
+   The full text of something cut off, over it, in the tooltip's look. */
+[data-slot='truncation-tip'] {
+  position: fixed; z-index: 120; max-width: min(420px, calc(100vw - 16px)); padding: 6px 10px; border-radius: 6px;
+  background: var(--foreground); color: var(--background); font-size: 12px; line-height: 1.45; white-space: normal; overflow-wrap: anywhere;
+  pointer-events: none; box-shadow: 0 4px 14px rgb(0 0 0 / .12);
+  animation: ui-tip-in var(--dur-quick) var(--ease-pop);
+}
+[data-slot='truncation-tip'][hidden] { display: none; }
+@keyframes ui-tip-in { from { opacity: 0; translate: 0 2px; } }
+@media (prefers-reduced-motion: reduce) { [data-slot='truncation-tip'] { animation: none; } }
+
+/* ------------------------------------------------------------------ Scroll fades
+   Every surface that scrolls fades at an edge it can scroll past, and only there: at the top once it
+   has been scrolled down, at the bottom while there is more below, and the same sideways. Each fade
+   grows in over the first 28px of scrolling (and out over the last 28px), so it is progressive, not a
+   switch. The two axes are separate masks, intersected, so a 2D surface's corners fade smoothly into
+   both. A fade starts after a surface's sticky parts (a header row, a first column), never over them;
+   base/scroll-fades.ts measures them, and tags every element that scrolls on its own
+   (data-scroll-fade), so no surface is missed; the class list here covers the first paint. CSS scroll-driven animations
+   set the four sizes; where they are not supported (Safari before 26), base/scroll-fades.ts sets them
+   from the scroll position instead. A surface opts out with data-no-scroll-fade. */
+@property --fade-top { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --fade-bottom { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --fade-left { syntax: '<length>'; inherits: false; initial-value: 0px; }
+/* An axis a surface does not scroll along has no fades (base/scroll-fades.ts marks it data-still-x or
+   -y): a scroll timeline left with no range holds the fade it had, so a surface that stopped
+   scrolling kept a faded edge with nothing past it (a pane's only tab, faded). */
+@property --fade-x { syntax: '<number>'; inherits: false; initial-value: 1; }
+@property --fade-y { syntax: '<number>'; inherits: false; initial-value: 1; }
+:where([data-still-x]) { --fade-x: 0; }
+:where([data-still-y]) { --fade-y: 0; }
+@property --fade-right { syntax: '<length>'; inherits: false; initial-value: 0px; }
+/* How far a surface's sticky parts reach into it (scroll-fades.ts measures them). Declared, and
+   not inherited: left as plain custom properties, writing them on a surface restyled everything
+   inside it (a sidebar's whole list, a page), in an idle moment that fell in the middle of a move. */
+@property --fade-inset-top { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --fade-inset-left { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@keyframes ui-fade-top { from { --fade-top: 0px; } to { --fade-top: 28px; } }
+@keyframes ui-fade-bottom { from { --fade-bottom: 28px; } to { --fade-bottom: 0px; } }
+@keyframes ui-fade-left { from { --fade-left: 0px; } to { --fade-left: 28px; } }
+@keyframes ui-fade-right { from { --fade-right: 28px; } to { --fade-right: 0px; } }
+:where([data-scroll-fade], [data-slot='zoom-viewport'], .overflow-auto, .overflow-y-auto, .overflow-x-auto, .overflow-scroll, .er-canvas,
+      [data-slot='ui-pane-body'], [data-slot='scroll-area-viewport'], [data-slot='widget-stage'][data-fit],
+      [data-slot='dropdown-menu-scroll'], [data-slot='select-viewport'],
+      .ui-listing.is-read, .ui-grid-scroll, .ui-rail, .ui-board-list, .ui-layer-fields, .ui-layers-nest,
+      .table-scroll, .data-scroll, .annotated-notes, .annotated-passage, .scenario-main, .source-panel-body,
+      .timeline-detail, .trace-note, .tc-outline, .er-map-tables, .datawidget-trail, .pane-body, .block-code pre, .block-math):where(:not([data-no-scroll-fade], [data-slot$='-content'])) {
+    mask-image:
+      linear-gradient(to bottom, #000 var(--fade-inset-top, 0px), transparent var(--fade-inset-top, 0px), #000 calc(var(--fade-inset-top, 0px) + var(--fade-top) * var(--fade-y)), #000 calc(100% - var(--fade-bottom) * var(--fade-y)), transparent),
+      linear-gradient(to right, #000 var(--fade-inset-left, 0px), transparent var(--fade-inset-left, 0px), #000 calc(var(--fade-inset-left, 0px) + var(--fade-left) * var(--fade-x)), #000 calc(100% - var(--fade-right) * var(--fade-x)), transparent);
+    mask-composite: intersect;
+}
+@supports (animation-timeline: scroll()) {
+  :where([data-scroll-fade], .overflow-auto, .overflow-y-auto, .overflow-x-auto, .overflow-scroll, .er-canvas,
+      [data-slot='ui-pane-body'], [data-slot='scroll-area-viewport'], [data-slot='widget-stage'][data-fit],
+      [data-slot='dropdown-menu-scroll'], [data-slot='select-viewport'],
+      .ui-listing.is-read, .ui-grid-scroll, .ui-rail, .ui-board-list, .ui-layer-fields, .ui-layers-nest,
+      .table-scroll, .data-scroll, .annotated-notes, .annotated-passage, .scenario-main, .source-panel-body,
+      .timeline-detail, .trace-note, .tc-outline, .er-map-tables, .datawidget-trail, .pane-body, .block-code pre, .block-math):where(:not([data-no-scroll-fade], [data-slot$='-content'])) {
+    animation: ui-fade-top linear both, ui-fade-bottom linear both, ui-fade-left linear both, ui-fade-right linear both;
+    animation-timeline: scroll(self block), scroll(self block), scroll(self inline), scroll(self inline);
+    animation-range: 0px 28px, calc(100% - 28px) 100%, 0px 28px, calc(100% - 28px) 100%;
+  }
+}
+
+/* ------------------------------------------------------------------ Theme switch
+   The page crossfades from one theme to the other (base/theme.ts, ): a picture of it
+   in the old theme fades into it in the new, in THEME_FADE_MS; the theme button's icon is drawn over
+   both, morphing (base/theme-icon.tsx), not faded. Only while a theme switch plays. */
+:root[data-theme-fading]::view-transition-old(root),
+:root[data-theme-fading]::view-transition-new(root) { animation-duration: .3s; animation-timing-function: cubic-bezier(.25, 0, .3, 1); }
+:root[data-theme-fading]::view-transition-old(*.theme-icon) { display: none; }
+:root[data-theme-fading]::view-transition-new(*.theme-icon) { animation: none; }
+
+/* ------------------------------------------------------------------ Caption
+   The one small label style (WIDGET KIND, YOUR PATH, KEY POINTS, a section's eyebrow): mono, small,
+   uppercase, a little tracked. Use the class, never spell it out. Low specificity, so a text colour
+   utility beside it wins. */
+/* A small label in the page's own type, as written: the sidebar's sans, muted (no
+   eyebrows anywhere, no small mono capitals spread wide). */
+:where(.ui-caption) { font-size: 12.5px; line-height: 1.5; font-weight: 500; color: var(--muted-foreground); }
+
+/* ------------------------------------------------------------------ Focus
+   The one keyboard-focus ring for anything that is not a base component (a row that is a button, a
+   card, a node): 3px of the ring colour at 35%, outside (ui-focus) or inside (ui-focus-inset, for
+   things in something that clips). Base components carry the same ring themselves. */
+.ui-focus, .ui-focus-inset { outline: none; }
+.ui-focus:focus-visible { box-shadow: 0 0 0 3px var(--ring-soft); }
+.ui-focus-inset:focus-visible { box-shadow: inset 0 0 0 3px var(--ring-soft); }
+
+/* A line view switch (view-switch.tsx): the underline runs on the bottom edge of the bar it sits in,
+   over that bar's rule, instead of floating under the label. */
+[data-slot='view-switch'][data-variant='line'] [data-slot='tabs-indicator'] { top: auto !important; bottom: -1px; }
+
+/* The sidebar slides when a class or a project opens, and back: the app wraps that
+   change of route in a view transition (frontend/src/ui/router.ts) and says which way on <html>. Only
+   the sidebar moves; a page has its own arrival. Browsers without view transitions swap at once. */
+[data-sidebar-slot] { view-transition-name: app-sidebar; }
+::view-transition-group(app-sidebar) { animation-duration: .34s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); overflow: clip; }
+::view-transition-old(app-sidebar), ::view-transition-new(app-sidebar) { animation-duration: .34s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); animation-fill-mode: both; height: 100%; }
+html[data-nav-slide='forward']::view-transition-old(app-sidebar) { animation-name: sidebar-out-left; }
+html[data-nav-slide='forward']::view-transition-new(app-sidebar) { animation-name: sidebar-in-right; }
+html[data-nav-slide='back']::view-transition-old(app-sidebar) { animation-name: sidebar-out-right; }
+html[data-nav-slide='back']::view-transition-new(app-sidebar) { animation-name: sidebar-in-left; }
+html[data-nav-slide]::view-transition-old(root), html[data-nav-slide]::view-transition-new(root) { animation: none; }
+@keyframes sidebar-out-left { to { transform: translateX(-40%); opacity: 0; } }
+@keyframes sidebar-in-right { from { transform: translateX(40%); opacity: 0; } }
+@keyframes sidebar-out-right { to { transform: translateX(40%); opacity: 0; } }
+@keyframes sidebar-in-left { from { transform: translateX(-40%); opacity: 0; } }
+

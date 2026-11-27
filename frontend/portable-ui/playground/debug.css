@@ -1,0 +1,23 @@
+/* The Debug dialog's switches that act through CSS: debug.ts sets these on <html>. */
+
+/* frames off screen laid out and painted like the rest (the library skips them, frame.tsx) */
+html[data-debug-draw-all] [data-slot='widget-frame'] { content-visibility: visible !important; }
+
+/* a canvas still waiting to be drawn (provider.tsx NearCanvas) */
+html[data-debug-waiting] [data-ui-waiting] { outline: 2px dashed var(--warn); outline-offset: -2px; }
+
+/* reduced motion forced on: CSS holds still as under the system setting */
+html[data-debug-motion] *, html[data-debug-motion] *::before, html[data-debug-motion] *::after {
+  animation-duration: 1ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important; transition-delay: 0s !important; scroll-behavior: auto !important;
+}
+
+/* a toast's time bar keeps its time: it says how long is left (the system setting keeps it too) */
+html[data-debug-motion] [data-slot='notification-time'] { animation-duration: var(--notice-ms) !important; }
+
+/* a layout shift: where the moved box went, and (dashed) where it was */
+.pg-shift { position: fixed; pointer-events: none; z-index: 2147483646; border: 2px solid var(--bad); border-radius: 3px; animation: pg-shift-fade 1.6s ease-out forwards; }
+.pg-shift[data-was] { border-style: dashed; border-color: var(--bad-line); }
+@keyframes pg-shift-fade { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
+/* (the outlines keep their own fade whatever motion is set to) */
+html[data-debug-motion] .pg-shift { animation-duration: 1.6s !important; }

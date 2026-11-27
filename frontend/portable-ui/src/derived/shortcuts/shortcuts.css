@@ -1,0 +1,11 @@
+/* The shortcuts guide (guide.tsx): a shortcut acted out on a small map. While a press plays, its
+   boxes move to the next layout (a box that appears fades in: SpaceMap); shown anew or starting over,
+   it is drawn at once, nothing growing in (too much motion to follow). The active
+   pane is ringed in its colour. */
+[data-slot='space-map'][data-animate] > span {
+  transition: left .4s cubic-bezier(.2, .9, .3, 1), top .4s cubic-bezier(.2, .9, .3, 1), width .4s cubic-bezier(.2, .9, .3, 1), height .4s cubic-bezier(.2, .9, .3, 1), background-color .2s, box-shadow .2s;
+}
+[data-slot='space-map'] > span[data-ringed] { outline: 2px solid var(--pc, var(--ring)); outline-offset: 1.5px; }
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='space-map'][data-animate] > span { transition: none; }
+}

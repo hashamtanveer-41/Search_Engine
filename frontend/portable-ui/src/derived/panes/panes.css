@@ -1,0 +1,310 @@
+/* Panes (see Workspace.tsx). Everything in the area is absolutely positioned from one geometry pass.
+   At rest the panes sit flush: the 1px gap between them is the area's own colour showing through,
+   so a pane boundary is a single hairline. Nothing changes shape while a tab is held: only its ghost
+   and the drop preview move. When the layout changes, motion.ts moves everything
+   on one spring; no CSS transition moves a pane. */
+.pane-area {
+  /* clip, not hidden: a hidden box still scrolls when something in it is scrolled into view or
+     focused, and a pane opening past its edge (pulled out of a strip) slid the whole area sideways; a clipping box never scrolls. */
+  position: relative; width: 100%; height: 100%; overflow: clip; background: var(--border);
+}
+.pane-area[data-moving] { background: var(--background); }
+/* With no pane open there are no hairlines to show: the page's own background, in both themes
+   (an empty space was the panes' grey). */
+.pane-area[data-empty] { background: var(--background); }
+/* Something held over an empty space: where it would land, the whole area, drawn as a drop's box is
+   (.drop-preview: a fill, square, flush); nothing marks the place at rest. */
+.pane-area[data-empty][data-drop-over]::after, .pane-area[data-phone][data-drop-over]::after { content: ''; position: absolute; inset: 0; z-index: 5; background: color-mix(in srgb, var(--info) 24%, transparent); pointer-events: none; }
+
+.pane-card, .pane-body, .pane-divider, .pane-strip { position: absolute; }
+/* What has left the page is drawn here while it goes (motion.ts): a folded group's card, an opened
+   strip, and under them the strip's colour, the size of the folding group. Under the cards, never
+   in the pointer's way. */
+.pane-ghosts { position: absolute; inset: 0; pointer-events: none; }
+.pane-fold-fill { position: absolute; background: var(--sidebar); }
+.pane-card { background: var(--background); overflow: hidden; contain: layout paint; }
+
+/* Tabs: the selected one joins its page; in the pane you are in, it carries a blue line on top. */
+/* The head row: the tabs (scrolling), then the pane menu and zoom, which never scroll away. They
+   have the head's own colour: while a card is drawn smaller than it is laid out (motion.ts) they
+   sit at its drawn edge, over the tabs. */
+.pane-head { display: flex; border-bottom: 1px solid var(--border); background: var(--sidebar); }
+.pane-tabs { display: flex; flex: 1; min-width: 0; height: 100%; overflow-x: auto; scrollbar-width: none; }
+.pane-actions { display: flex; flex: none; align-items: center; gap: 2px; padding: 0 6px; color: var(--muted-foreground); background: var(--sidebar); }
+.pane-tabs::-webkit-scrollbar { display: none; }
+.pane-tab { position: relative; display: flex; align-items: center; flex: 0 0 auto; max-width: 240px; border-right: 1px solid var(--border); color: var(--muted-foreground); }
+.pane-tab[data-selected] { color: var(--foreground); background: var(--background); box-shadow: 0 1px 0 var(--background); }
+.pane-card[data-active] .pane-tab[data-selected] { box-shadow: inset 0 2px 0 var(--info), 0 1px 0 var(--background); }
+.pane-tab:hover { color: var(--foreground); }
+.pane-tab[data-dragging] { opacity: .4; }
+.pane-tab > [role='tab'] { display: flex; align-items: center; gap: 8px; min-width: 0; height: 100%; padding: 0 4px 0 13px; font-size: 13px; font-weight: 500; touch-action: none; user-select: none; outline: none; }
+/* Focus wraps the whole tab, its close button included. */
+.pane-tab:has(:focus-visible) { box-shadow: inset 0 0 0 3px var(--ring-soft); }
+.pane-tab-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A preview: the next plain click shows its page in this tab. */
+/* Slanted, as VS Code draws a preview tab. Geist has no italic face and the app
+   turns off made-up styles (font-synthesis: none), so the browser is let slant it here. */
+.pane-tab[data-preview] .pane-tab-title { font-style: italic; font-synthesis: style; }
+/* Where it is, for two tabs with the same title. */
+.pane-tab-where { flex: none; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted-foreground); font-size: 11px; font-weight: 400; }
+/* Unsaved: a dot in place of the ×, which comes back on hover. */
+.pane-tab-close { position: relative; }
+.pane-tab-dot { position: absolute; inset: 0; margin: auto; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.pane-tab[data-dirty] .pane-tab-close { opacity: 1; }
+.pane-tab[data-dirty] .pane-tab-x { visibility: hidden; }
+.pane-tab[data-dirty] .pane-tab-close:hover .pane-tab-x { visibility: visible; }
+.pane-tab[data-dirty] .pane-tab-close:hover .pane-tab-dot { display: none; }
+.pane-tab-close { margin-right: 6px; opacity: 0; }
+.pane-tab:hover .pane-tab-close, .pane-tab[data-selected] .pane-tab-close, .pane-tab-close:focus-visible { opacity: 1; }
+.pane-tab-close:focus-visible { background: var(--muted); }
+
+/* The active pane's frame, for a moment after the active group changes; a pane brought forward from
+   outside glows once. Drawn over the cards and pages, never in the way of the pointer. */
+.pane-frame, .pane-glow { position: absolute; z-index: 6; pointer-events: none; }
+.pane-frame { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--info) 55%, transparent); opacity: 0; transition: opacity 300ms ease; }
+/* …and while Alt is held with its hints up (Workspace.tsx, AltLayer), but not under a held tab. */
+.pane-frame[data-show], .pane-area[data-alt-hints]:not([data-held]) .pane-frame { opacity: 1; transition-duration: 120ms; }
+.pane-glow { z-index: 7; box-shadow: inset 0 0 0 2px var(--info), inset 0 0 24px color-mix(in srgb, var(--info) 30%, transparent); }
+
+/* A strip: a group folded away, as thick as a tab bar, flush like the cards. Its title runs along
+   it; a click anywhere opens it at the size it had. */
+.pane-strip { display: flex; align-items: center; gap: 6px; overflow: hidden; background: var(--sidebar); color: var(--muted-foreground); cursor: pointer; }
+.pane-strip:hover { color: var(--foreground); background: var(--muted); }
+.pane-strip-row { flex-direction: column; padding: 8px 0; }
+.pane-strip-column { flex-direction: row; padding: 0 8px; }
+.pane-strip-open { flex: 1; min-width: 0; min-height: 0; overflow: hidden; padding: 4px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--foreground); outline: none; }
+.pane-strip-row .pane-strip-open { writing-mode: vertical-rl; }
+.pane-strip-column .pane-strip-open { text-align: center; }
+.pane-strip-open span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pane-strip-open:focus-visible { box-shadow: inset 0 0 0 3px var(--ring-soft); }
+.pane-strip-icons { display: flex; gap: 2px; }
+.pane-strip-row .pane-strip-icons { flex-direction: column; }
+.pane-strip-icons [data-front] { color: var(--foreground); background: var(--muted); }
+/* Each pane's colour (model.ts Pane.color), strong to draw with and soft to sit on, in light and
+   dark: a dot on its tab, its icon on a strip, its dot in a box. */
+/* In the order they are given, most unlike first (amber beside orange was too
+   close): blue, orange, green, pink, then violet, yellow, cyan, red. */
+:root {
+  --pane-c0: #2563eb; --pane-s0: #dbeafe; --pane-c1: #ea580c; --pane-s1: #ffedd5;
+  --pane-c2: #16a34a; --pane-s2: #dcfce7; --pane-c3: #db2777; --pane-s3: #fce7f3;
+  --pane-c4: #7c3aed; --pane-s4: #ede9fe; --pane-c5: #ca8a04; --pane-s5: #fef9c3;
+  --pane-c6: #0891b2; --pane-s6: #cffafe; --pane-c7: #dc2626; --pane-s7: #fee2e2;
+}
+[data-theme='dark'], .dark {
+  --pane-c0: #60a5fa; --pane-s0: #172554; --pane-c1: #fb923c; --pane-s1: #431407;
+  --pane-c2: #4ade80; --pane-s2: #052e16; --pane-c3: #f472b6; --pane-s3: #500724;
+  --pane-c4: #a78bfa; --pane-s4: #2e1065; --pane-c5: #facc15; --pane-s5: #422006;
+  --pane-c6: #22d3ee; --pane-s6: #083344; --pane-c7: #f87171; --pane-s7: #450a0a;
+}
+[data-color='0'] { --pc: var(--pane-c0); --ps: var(--pane-s0); } [data-color='1'] { --pc: var(--pane-c1); --ps: var(--pane-s1); }
+[data-color='2'] { --pc: var(--pane-c2); --ps: var(--pane-s2); } [data-color='3'] { --pc: var(--pane-c3); --ps: var(--pane-s3); }
+[data-color='4'] { --pc: var(--pane-c4); --ps: var(--pane-s4); } [data-color='5'] { --pc: var(--pane-c5); --ps: var(--pane-s5); }
+[data-color='6'] { --pc: var(--pane-c6); --ps: var(--pane-s6); } [data-color='7'] { --pc: var(--pane-c7); --ps: var(--pane-s7); }
+.pane-tab-color { flex: none; width: 6px; height: 6px; margin-right: 7px; border-radius: 999px; background: var(--pc); }
+/* A tab's page icon, in its pane's colour, as its strip shows it. */
+.pane-tab-icon { flex: none; display: grid; place-items: center; width: 16px; height: 16px; margin-right: 6px; color: var(--pc); }
+.pane-tab-icon svg { width: 14px; height: 14px; }
+.pane-strip-icons [data-color] { color: var(--pc); background: var(--ps); }
+.pane-strip-icons [data-color][data-front] { box-shadow: inset 0 0 0 1px var(--pc); }
+.pane-strip-count[data-color] { color: var(--pc); background: var(--ps); }
+/* A page's icon on its colour's tile, as a strip shows it (24 px, 12 px icon), in a corner box's menu. The icon takes the tile's colour: the menu item would grey it. */
+.pane-icon-tile { flex: none; display: grid; place-items: center; width: 24px; height: 24px; margin: -2px 0; border-radius: var(--radius-md); color: var(--pc); background: var(--ps); }
+.pane-icon-tile[data-front] { box-shadow: inset 0 0 0 1px var(--pc); }
+.pane-icon-tile svg { width: 12px; height: 12px; color: inherit; }
+.pane-strip-dots { display: flex; justify-content: center; gap: 2px; }
+.pane-strip-dots i { width: 4px; height: 4px; border-radius: 999px; background: var(--pc); }
+/* A folded row meets a folded column: one square, the count (or the one page's icon) in its middle. */
+.pane-strip-corner { justify-content: center; padding: 0; }
+.pane-strip-count { display: grid; place-items: center; align-content: center; gap: 2px; width: 26px; height: 26px; border-radius: 6px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--foreground); outline: none; }
+.pane-strip-count svg { width: 14px; height: 14px; }
+.pane-strip-count:focus-visible { box-shadow: inset 0 0 0 3px var(--ring-soft); }
+.pane-area[data-held] .pane-strip { opacity: .75; }
+/* The strip a group is being pulled into: on the page, unseen until the fold draws it (motion.ts). */
+.pane-strip[data-fold-preview] { opacity: 0; pointer-events: none; }
+
+/* A page scrolls inside its pane, and lays out by the pane's width, not the window's. */
+/* Isolated, so nothing a page draws (its own layers, a sticky header) can rise above the panes'
+   overlays: the drop targets, the frame, the hints. */
+/* Pages scroll down, never sideways: something too wide scrolls inside itself, not the page. */
+.pane-body { overflow: hidden auto; overscroll-behavior: contain; background: var(--background); isolation: isolate; }
+.pane-body[data-hidden] { visibility: hidden; content-visibility: hidden; }
+/* A divider drag lays the pages out live: contained meanwhile, so that stays inside each page.
+   Only then: at rest containment would trap a page's full-window dialogs. */
+.pane-area[data-resizing] .pane-body { contain: layout paint; }
+/* A held tab or a dragged divider owns the pointer: a frame under it would swallow the release. */
+.pane-area:is([data-held], [data-resizing]) .pane-body { pointer-events: none; }
+.pane-area[data-resizing] { cursor: col-resize; }
+.pane-area[data-resizing]:has(.pane-divider-column:active) { cursor: row-resize; }
+.pane-body:focus { outline: none; }
+.pane-page { min-height: 100%; container-type: inline-size; container-name: pane; }
+.pane-error { display: grid; gap: 10px; justify-items: start; padding: 28px; }
+
+/* The divider is the hairline; its grip reaches 4px either side of it. */
+.pane-divider { z-index: 4; touch-action: none; outline: none; }
+.pane-divider::before { content: ''; position: absolute; inset: 0 -4px; }
+.pane-divider-column::before { inset: -4px 0; }
+.pane-divider-row { cursor: col-resize; }
+.pane-divider-column { cursor: row-resize; }
+.pane-divider::after { content: ''; position: absolute; inset: 0; background: transparent; transition: background .15s, box-shadow .15s; }
+/* Every stretch of the line under the pointer lights up: dividers that line up are one line (model.ts). */
+.pane-divider:hover::after, .pane-divider:active::after, .pane-divider[data-hot]::after { background: var(--info); box-shadow: 0 0 0 1px var(--info); }
+/* With Alt held only the stretch an Alt-drag moves is lit (.pane-divider-part), not the line. */
+.pane-divider[data-alt]:hover::after { background: transparent; box-shadow: none; }
+.pane-divider-part { position: absolute; z-index: 4; pointer-events: none; background: var(--info); box-shadow: 0 0 0 1px var(--info); }
+.pane-divider:focus-visible::after { background: var(--foreground); box-shadow: 0 0 0 3px var(--ring-soft); }
+.pane-tip-anchor { position: absolute; width: 12px; height: 12px; pointer-events: none; }
+.pane-area[data-resizing] .pane-divider:focus::after { background: var(--info); box-shadow: 0 0 0 1px var(--info); }
+
+/* The two shares on a divider while it is dragged, and for a moment after an even share. */
+.split-label { position: absolute; z-index: 12; transform: translate(-50%, -50%); display: flex; gap: 6px; align-items: center; padding: 3px 10px; border-radius: 999px; background: var(--foreground); color: var(--background); font-size: 12px; font-weight: 600; line-height: 1.3; font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .12); }
+.split-label-sep { opacity: .5; }
+.split-label[data-settled] { animation: split-label-out 1100ms ease forwards; }
+@keyframes split-label-out { 70% { opacity: 1; } to { opacity: 0; } }
+
+/* While a tab is held: where it can go and what that does. */
+/* On top of everything in the area: pages, cards, frame and glow, dividers and their labels. */
+.drag-overlay { position: absolute; inset: 0; z-index: 30; pointer-events: none; }
+/* A target starts as a thin bar; once the tab leaves its own pane they all grow to the size they
+   answer to, over the panes (which never move). The one under the pointer is highlighted. */
+/* The drop hints are fills only: square, no borders. */
+.zone-hint { position: absolute; background: color-mix(in srgb, var(--info) 22%, transparent); transition: background 120ms; }
+.drag-overlay .zone-hint[data-hovered] { background: color-mix(in srgb, var(--info) 26%, transparent); }
+.drag-overlay .zone-hint[data-state='refused'] { background: color-mix(in srgb, var(--bad) 26%, transparent); }
+.drag-overlay .zone-hint[data-state='noop'] { background: color-mix(in srgb, var(--muted-foreground) 18%, transparent); }
+/* Where the pane will land, on the layout as it is now: a pane (or the side of one) outlined on its
+   own edge, a new place (a gap, an edge) inset. */
+.drop-preview { position: absolute; background: color-mix(in srgb, var(--info) 24%, transparent); }
+/* A page that cannot be a pane, refusing one brought onto it: the whole of it, in red. */
+.drop-preview[data-state='refused'] { background: color-mix(in srgb, var(--bad) 22%, transparent); }
+/* The divider or window edge a drop goes into, lit softly under the box. */
+.drop-line { position: absolute; border-radius: 999px; background: var(--info); opacity: .45; pointer-events: none; }
+
+.tab-marker { position: absolute; border-radius: 1px; background: var(--info); }
+/* At the pointer: the pane's name; over a target, the pill saying what the drop does, under the
+   map of the layout it leaves when the other groups move. */
+.ghost { position: fixed; left: 0; top: 0; z-index: 1000; max-width: 220px; padding: 5px 12px; border: 1px solid var(--info); border-radius: 6px; background: var(--popover); color: var(--foreground); box-shadow: 0 6px 18px rgba(0, 0, 0, .12); font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; will-change: transform; }
+.ghost[hidden] { display: none; }
+.ghost[data-plan] { display: grid; justify-items: center; gap: 6px; max-width: none; padding: 0; border: 0; background: none; box-shadow: none; overflow: visible; }
+/* The map beside the pointer, over the label, the two centred on one another. Its
+   boxes are outlined and round, as the panes are, with as much room round the outer ones as between
+   two; the frame's corners are a box's plus that room (MAP_RADIUS + MAP_METRICS.inset). */
+.ghost-map-frame { overflow: hidden; border-radius: 6px; box-shadow: 0 6px 18px rgba(0, 0, 0, .18); }
+.ghost-map { display: block; background: var(--background); }
+.ghost-map rect { fill: var(--muted); stroke: color-mix(in srgb, var(--muted-foreground) 45%, transparent); stroke-width: 1px; }
+.ghost-map rect[data-mine] { fill: var(--info-soft); stroke: var(--info); stroke-width: 1.5px; }
+/* The whole label, never cut ("Between the 2 panes on the left and the 3 pane…"):
+   a long one goes onto a second line, the two balanced. */
+.ghost-pill { max-width: 420px; white-space: normal; text-wrap: balance; text-align: center; padding: 4px 10px; border-radius: 13px; background: var(--info); color: #fff; line-height: 1.3; box-shadow: 0 6px 18px rgba(0, 0, 0, .12); }
+.ghost-pill[data-state='refused'] { background: var(--bad); }
+.ghost-pill[data-state='noop'] { background: var(--popover); color: var(--foreground); border: 1px solid var(--border); }
+
+/* Phone: one page (or two, stacked), a floating bar at the bottom and a sheet of open pages. */
+.pane-area[data-phone] { background: var(--background); }
+.pane-area[data-phone] .pane-page { padding-bottom: 84px; }
+.phone-handle { position: absolute; left: 0; right: 0; z-index: 4; display: grid; place-items: center; background: var(--muted); border-block: 1px solid var(--border); touch-action: none; cursor: row-resize; outline: none; translate: var(--phone-swipe, 0px) 0; }
+.phone-handle span { width: 44px; height: 5px; border-radius: 3px; background: var(--foreground); }
+/* It looks 14 px thick; a finger gets 44 (a tap-target audit on a phone). */
+.phone-handle::before { content: ''; position: absolute; inset-inline: 0; inset-block: -15px; }
+.phone-handle:focus-visible { box-shadow: inset 0 0 0 3px var(--ring-soft); }
+/* A phone on its side: the pair side by side, the divider upright and dragged sideways. */
+.phone-handle[data-sideways] { top: 0; bottom: 0; right: auto; border-block: 0; border-inline: 1px solid var(--border); cursor: col-resize; }
+.phone-handle[data-sideways] span { width: 5px; height: 44px; }
+.phone-handle[data-sideways]::before { inset-block: 0; inset-inline: -15px; }
+.phone-handle[data-closing] span { background: var(--bad); }
+/* The divider pulled to an end: the page there dims and says it closes on letting go. */
+.phone-closing { position: absolute; left: 0; right: 0; z-index: 5; background: color-mix(in srgb, var(--background) 72%, transparent); pointer-events: none; }
+.phone-closing-label { position: absolute; left: 50%; z-index: 6; translate: -50% 0; max-width: calc(100% - 48px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 4px 12px; border-radius: 13px; background: var(--bad); color: #fff; font-size: 13px; font-weight: 600; line-height: 18px; box-shadow: 0 6px 18px rgba(0, 0, 0, .12); pointer-events: none; }
+/* The bar (redone for the pages' coloured icons, ): on the theme's own surface, not a
+   pill in the opposite colour, each page's icon on a tile in its soft colour, as on the space maps. */
+.phone-bar {
+  position: absolute; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); z-index: 20; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px; width: min(420px, calc(100% - 32px)); min-height: 52px; padding: 7px 8px 7px 7px;
+  border: 1px solid var(--border); border-radius: 18px;
+  background: color-mix(in srgb, var(--popover) 90%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4);
+  color: var(--foreground); box-shadow: 0 10px 30px rgba(0, 0, 0, .16), 0 1px 3px rgba(0, 0, 0, .08);
+  touch-action: pan-y; font-size: 14px; text-align: left; outline: none;
+}
+.phone-bar .pane-tab-icon { width: 36px; height: 36px; margin-right: 11px; border-radius: 11px; background: var(--ps, var(--muted)); color: var(--pc, var(--muted-foreground)); }
+/* On its side a phone has little height: the bar slimmer and nearer the edge, less room left under a page. */
+@media (orientation: landscape) {
+  .phone-bar { bottom: max(8px, env(safe-area-inset-bottom)); width: min(380px, calc(100% - 32px)); min-height: 44px; padding: 4px 6px 4px 4px; border-radius: 15px; }
+  .phone-bar .pane-tab-icon { width: 34px; height: 34px; border-radius: 10px; }
+  .pane-area[data-phone] .pane-page { padding-bottom: 64px; }
+}
+.phone-bar .pane-tab-icon svg { width: 18px; height: 18px; }
+/* Two pages, one above the other: a line each, as they sit; the one in use in full strength. */
+.phone-bar-pair { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.phone-bar-pair .phone-bar-title { font-size: 13px; color: var(--muted-foreground); }
+.phone-bar-pair .phone-bar-title[data-in-use] { color: var(--foreground); }
+.phone-bar-pair .pane-tab-icon { width: 24px; height: 24px; margin-right: 9px; border-radius: 7px; }
+.phone-bar-pair .pane-tab-icon svg { width: 14px; height: 14px; }
+.phone-card-main .pane-tab-icon { width: 24px; height: 24px; margin-right: 10px; border-radius: 7px; background: var(--ps, var(--muted)); }
+.phone-bar:focus-visible { box-shadow: 0 0 0 3px var(--ring-soft); }
+/* The bar's title and count: this page's in the middle, either side's a slot away, sliding across
+   with a swipe (Workspace.tsx, PhoneBar). Only the middle one takes space. */
+.phone-bar-slots { position: relative; flex: 1; min-width: 0; align-self: stretch; overflow: hidden; }
+.phone-bar-slots > [data-title-slot] { display: flex; align-items: center; gap: 10px; height: 100%; }
+.phone-bar-slots > [data-title-slot]:not([data-title-slot='0']) { position: absolute; inset: 0; }
+.phone-bar-title { flex: 1; min-width: 0; display: flex; align-items: center; overflow: hidden; white-space: nowrap; font-weight: 600; }
+.phone-bar-count { flex: none; padding: 4px 10px; border-radius: 999px; background: var(--muted); color: var(--muted-foreground); font-family: var(--font-mono); font-size: 12px; }
+.phone-sheet-scrim { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; background: rgba(0, 0, 0, .35); }
+.phone-sheet { width: 100%; max-height: 78vh; overflow: auto; padding: 0 16px max(20px, env(safe-area-inset-bottom)); border-radius: 22px 22px 0 0; background: var(--popover); }
+/* Its top drags it down (Workspace.tsx, PhoneBar): the grab line and the heading. */
+.phone-sheet-grab { display: grid; place-items: center; height: 18px; touch-action: none; cursor: grab; }
+.phone-sheet-grab span { width: 36px; height: 4px; border-radius: 2px; background: var(--border); }
+.phone-sheet-head { touch-action: none; }
+/* A swipe on the bar moves the page showing with the finger; the bar leans a little the same way. */
+.pane-area[data-phone] .pane-body[data-active], .pane-area[data-phone] .pane-body[data-paired] { translate: var(--phone-swipe, 0px) 0; }
+/* …and the pages either side ride beside it, a page-width away, while the swipe is in play. */
+.pane-area[data-phone] .pane-body[data-peek='next'] { translate: calc(var(--phone-swipe, 0px) + 100%) 0; pointer-events: none; }
+.pane-area[data-phone] .pane-body[data-peek='prev'] { translate: calc(var(--phone-swipe, 0px) - 100%) 0; pointer-events: none; }
+/* Reduced motion: nothing travels. The swipe fades through instead: this page out, then the one it
+   leads to in, in the same place (the opacities are set by PhoneBar). */
+@media (prefers-reduced-motion: reduce) {
+  .pane-area[data-phone] .pane-body[data-active], .pane-area[data-phone] .pane-body[data-paired], .pane-area[data-phone] .phone-handle { translate: none; opacity: var(--phone-fade-out, 1); }
+  .pane-area[data-phone] .pane-body[data-peek] { translate: none; z-index: 1; }
+  .pane-area[data-phone] .pane-body[data-peek='next'] { opacity: var(--phone-fade-next, 0); }
+  .pane-area[data-phone] .pane-body[data-peek='prev'] { opacity: var(--phone-fade-prev, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) { .phone-sheet { animation: none; } }
+.phone-sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 0 0 12px; font-size: 17px; }
+.phone-sheet ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.phone-card { display: flex; align-items: stretch; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.phone-card[data-current] { border: 2px solid var(--foreground); }
+.phone-card-main { flex: 1; min-width: 0; display: grid; gap: 2px; padding: 12px 14px; text-align: left; outline: none; }
+.phone-card-main:focus-visible, .phone-card-action:focus-visible { box-shadow: inset 0 0 0 3px var(--ring-soft); }
+.phone-card-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phone-card-main small { color: var(--muted-foreground); font-size: 12px; }
+.phone-card-main em { font-style: normal; font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.phone-card-action { display: grid; place-items: center; align-content: center; min-width: 56px; padding: 0 10px; border-left: 1px solid var(--border); font-size: 11px; font-weight: 500; outline: none; }
+.phone-sheet-hint { margin-top: 12px; font-size: 12px; color: var(--muted-foreground); text-align: center; }
+
+/* Alt held: each key drawn where it goes (AltHints.tsx). The key alone, no words; the info colour
+   so it reads as "this is where it goes", not as content. */
+.alt-hints { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+.alt-hint { position: absolute; display: flex; gap: 3px; align-items: center; animation: alt-hint-in 110ms ease-out; }
+.alt-hint[data-anchor='centre'] { transform: translate(-50%, -50%); }
+.alt-hint[data-anchor='start'] { transform: translate(0, -50%); }
+.alt-hint[data-anchor='end'] { transform: translate(-100%, -50%); }
+.alt-hint[data-anchor='top'] { transform: translate(-50%, 0); }
+.alt-hint[data-anchor='bottom'] { transform: translate(-50%, -100%); }
+.alt-hint-go, .alt-hint-edge { padding: 5px 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--popover); box-shadow: 0 6px 18px rgba(0, 0, 0, .12); }
+.alt-hint-edge { padding: 3px 5px; border-radius: 8px; }
+.alt-cap { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 4px; background: var(--info); color: var(--background); font-family: var(--font-mono); font-size: 12px; font-weight: 700; line-height: 1; }
+.alt-cap svg { width: 12px; height: 12px; }
+.alt-hint-badge .alt-cap { min-width: 16px; height: 16px; font-size: 11px; }
+@keyframes alt-hint-in { from { opacity: 0; scale: .92; } }
+@media (prefers-reduced-motion: reduce) { .alt-hint { animation: none; } }
+
+/* Forced colours (Windows high contrast): the frame, the glow, key caps and the divider bar keep
+   system colours so they still show. */
+@media (forced-colors: active) {
+  .pane-frame[data-show], .pane-area[data-alt-hints]:not([data-held]) .pane-frame, .pane-glow { box-shadow: none; outline: 2px solid Highlight; outline-offset: -2px; }
+  .alt-cap, .split-label { background: Highlight; color: HighlightText; forced-color-adjust: none; }
+  .pane-divider:hover::after, .pane-divider:focus-visible::after { background: Highlight; }
+  .pane-strip { border: 1px solid CanvasText; }
+}
+
+/* Nothing open: the ways back, in the middle of the area. */
+.pane-empty { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; text-align: center; background: var(--background); }

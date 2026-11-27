@@ -1,0 +1,12 @@
+/* View lock (view-lock.tsx). A refused try shakes the lock (a transform: nothing re-lays out) and
+   lights the widget's outline in the "you are here" blue for a second. */
+[data-slot='view-lock'][data-shake] { animation: ui-lock-shake 420ms var(--ease-settle); color: var(--info); }
+@keyframes ui-lock-shake {
+  15% { translate: -3px 0; rotate: -12deg; } 35% { translate: 3px 0; rotate: 10deg; }
+  55% { translate: -2px 0; rotate: -6deg; } 75% { translate: 1px 0; rotate: 3deg; } 100% { translate: 0 0; rotate: 0deg; }
+}
+[data-slot='widget-frame'] { transition: box-shadow var(--dur-quick) var(--ease-settle), border-color var(--dur-quick) var(--ease-settle); }
+[data-slot='widget-frame'][data-nudged] { border-color: var(--info); box-shadow: 0 0 0 3px var(--info-soft); }
+[data-slot='zoom-pane']:not([data-locked]) { cursor: grab; touch-action: none; }
+[data-slot='zoom-pane']:not([data-locked]):active { cursor: grabbing; }
+@media (prefers-reduced-motion: reduce) { [data-slot='view-lock'][data-shake] { animation-duration: 1ms; } }

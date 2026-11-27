@@ -1,0 +1,18 @@
+/* Question (question.tsx): the parts Tailwind utilities do not say well. */
+
+/* An answer field and its preview. The preview has its own line, reserved, so typing moves nothing. */
+.answer-field { display: inline-flex; flex-direction: column; gap: 4px; width: min(420px, 100%); position: relative; vertical-align: baseline; }
+.answer-preview { display: flex; align-items: center; gap: 4px; height: 18px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: var(--muted-foreground); }
+.answer-preview code { font-family: var(--font-mono); color: var(--foreground); }
+.answer-preview.is-error { color: var(--warn); }
+.answer-field[data-mark='correct'] .answer-input, .answer-input.correct { border-color: var(--ok); box-shadow: 0 0 0 1px var(--ok); }
+.answer-field[data-mark='incorrect'] .answer-input, .answer-input.incorrect { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
+/* Compact (inside running text): narrow, and the preview floats ABOVE the field while it has focus, like
+   a tooltip (above, so it never runs off the bottom of the question and gets cut). */
+.answer-field.compact { width: 9.5em; }
+.answer-field.compact .answer-input::placeholder { color: var(--muted-foreground); font-size: 11px; }
+.answer-field.compact .answer-preview {
+  display: none; position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 3; height: auto; line-height: 1.6; width: max-content; max-width: min(28em, 80vw); white-space: normal;
+  background: var(--popover); border: 1px solid var(--border); border-radius: 6px; padding: 1px 8px; box-shadow: 0 2px 8px rgb(0 0 0 / .08);
+}
+.answer-field.compact:focus-within .answer-preview:not(:empty) { display: flex; }

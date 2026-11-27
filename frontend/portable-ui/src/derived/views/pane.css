@@ -1,0 +1,10 @@
+/* Pane (pane.tsx) */
+.ui-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; }
+.ui-pane + .ui-pane { border-left: 1px solid var(--border); }
+.ui-pane-head { display: flex; align-items: center; gap: 8px; height: 28px; flex: none; padding: 0 12px; border-bottom: 1px solid var(--border); background: var(--card); }
+/* The type is the shared caption (.ui-caption); this only keeps it to one line. */
+.ui-pane-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-pane-title b, .ui-pane-title strong { color: var(--foreground); font-weight: 600; }
+.ui-pane-aside { margin-left: auto; display: flex; align-items: center; gap: 4px; flex: none; font-size: 11px; color: var(--muted-foreground); }
+.ui-pane-body { position: relative; flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+.ui-pane-foot { flex: none; padding: 5px 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted-foreground); }

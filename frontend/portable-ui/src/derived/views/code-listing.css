@@ -1,0 +1,52 @@
+/* CodeListing (code-listing.tsx): fills its parent and scrolls on its own. */
+.ui-listing { --listing-line: 22px; display: flex; height: 100%; min-width: 0; min-height: 0; background: color-mix(in srgb, var(--muted) 55%, transparent); font-family: var(--font-mono); font-size: 12.5px; line-height: var(--listing-line); }
+.ui-listing.is-read { display: block; overflow: auto; overscroll-behavior: contain; }
+.ui-listing pre { margin: 0; padding: 8px 0; min-width: min-content; font: inherit; }
+.ui-listing-line { display: grid; grid-template-columns: 34px 1fr auto; align-items: baseline; height: var(--listing-line); padding: 0 12px 0 0; transition: background-color var(--dur-quick) var(--ease-settle); }
+.ui-listing.has-markers .ui-listing-line { grid-template-columns: 16px 30px 1fr auto; padding-left: 2px; }
+.ui-listing-line code { white-space: pre; background: none; font: inherit; }
+.ui-listing-line[data-current] { background: var(--info-soft); box-shadow: inset 2px 0 0 var(--info); }
+.ui-listing-marker { color: var(--info); font-size: 10px; text-align: center; }
+.ui-listing-number { padding-right: 10px; color: var(--muted-foreground); font-size: 11px; text-align: right; user-select: none; }
+.ui-listing-end { padding-left: 12px; color: var(--muted-foreground); font-family: var(--font-sans); font-size: 11.5px; white-space: nowrap; }
+
+/* Notes at line ends: one column, left-aligned, starting just past the longest line (in ch, the
+   code being monospaced), not pushed to the right edge. */
+.ui-listing[data-notes] .ui-listing-line { grid-template-columns: 34px var(--listing-code) 1fr; }
+.ui-listing[data-notes].has-markers .ui-listing-line { grid-template-columns: 16px 30px var(--listing-code) 1fr; }
+.ui-listing[data-notes].has-bar .ui-listing-line { grid-template-columns: 46px var(--listing-code) 1fr; }
+.ui-listing[data-notes] .ui-listing-end { padding-left: 24px; }
+
+/* Tones: a whole line, or a part of one. */
+.ui-listing-line.ui-tone-info { background: var(--info-soft); }
+.ui-listing-line.ui-tone-ok { background: var(--ok-soft); box-shadow: inset 2px 0 0 var(--ok); }
+.ui-listing-line.ui-tone-warn { background: var(--warn-soft); box-shadow: inset 2px 0 0 var(--warn); }
+.ui-listing-line.ui-tone-bad { background: var(--bad-soft); box-shadow: inset 2px 0 0 var(--bad); }
+.ui-listing-line.ui-tone-thm { background: var(--thm-soft); box-shadow: inset 2px 0 0 var(--thm); }
+.ui-listing mark { padding: 0 1px; border-radius: 3px; color: inherit; font-weight: 600; background: color-mix(in srgb, var(--warn) 22%, transparent); }
+.ui-listing mark.ui-tone-info { background: color-mix(in srgb, var(--info) 18%, transparent); }
+.ui-listing mark.ui-tone-ok { background: color-mix(in srgb, var(--ok) 20%, transparent); }
+.ui-listing mark.ui-tone-bad { background: transparent; text-decoration: underline wavy var(--bad); text-underline-offset: 3px; }
+.ui-listing mark.ui-tone-thm { background: color-mix(in srgb, var(--thm) 18%, transparent); }
+
+
+/* The movable current line (onPick): one bar behind the text, sliding between lines; dragged, it
+   follows the pointer exactly. */
+.ui-listing.is-pickable { cursor: pointer; user-select: none; }
+.ui-listing.has-bar pre { position: relative; }
+.ui-listing.has-bar .ui-listing-line[data-current] { background: none; box-shadow: none; }
+.ui-listing-bar { position: absolute; left: 2px; right: 2px; z-index: 0; border-radius: 6px; background: var(--info-soft); pointer-events: none; transition: top var(--dur-move) var(--ease-settle); }
+.ui-listing-bar[data-dragging], .ui-listing-pointer[data-dragging] { transition: none; }
+/* The pointer: the current line's number on a solid tag with a point into the code (no separate
+   arrow). It covers the number column; the code starts 5px after its point. */
+.ui-listing.has-bar .ui-listing-line { grid-template-columns: 46px 1fr auto; }
+.ui-listing-pointer {
+  position: absolute; z-index: 2; left: 6px; width: 28px; transition: top var(--dur-move) var(--ease-settle); padding-right: 3px; display: grid; place-items: center end;
+  border-radius: 5px 0 0 5px; background: var(--info); color: var(--background); font-size: 11px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.ui-listing-pointer::after {
+  content: ''; position: absolute; left: 100%; top: 0; bottom: 0; width: 7px; background: var(--info);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+.ui-listing.has-bar .ui-listing-line { position: relative; z-index: 1; }
+@media (prefers-reduced-motion: reduce) { .ui-listing-bar, .ui-listing-pointer { transition: none; } }
