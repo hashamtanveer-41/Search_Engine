@@ -61,7 +61,8 @@ class TestForwardIndex(unittest.TestCase):
             with open(os.path.join(d, "metadata.jsonl"), "rb") as f:
                 moffs = load_offsets(os.path.join(d, "metadata.offsets"))
                 self.assertEqual(read_metadata(f, moffs, 1)["id"], "0002")
-            self.assertEqual(json.load(open(os.path.join(d, "docmap.json"))), ["0001", "0002", "0003"])
+            with open(os.path.join(d, "docmap.json")) as f:
+                self.assertEqual(json.load(f), ["0001", "0002", "0003"])
 
 
 if __name__ == "__main__":
